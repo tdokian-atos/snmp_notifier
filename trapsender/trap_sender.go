@@ -51,7 +51,8 @@ type Configuration struct {
 	SNMPSecurityEngineID       string
 	SNMPContextEngineID        string
 	SNMPContextName            string
-	SNMPTrapParamOID           string
+        SNMPVarBindAltEnabled      bool
+        SNMPVarBindGroupID         string
 
 	DescriptionTemplate template.Template
 	ExtraFieldTemplates map[string]template.Template
@@ -114,10 +115,10 @@ func (trapSender TrapSender) generateVarBinds(alertGroup types.AlertGroup) (snmp
 	trapOid, _ := snmpgo.NewOid(alertGroup.OID)
 	varBinds = addUpTime(varBinds)
 	varBinds = append(varBinds, snmpgo.NewVarBind(snmpgo.OidSnmpTrap, trapOid))
-	if trapSender.configuration.SNMPTrapParamOID != "TRAPPARAMOID" {
-		varBinds = addStringSubOid(varBinds, trapSender.configuration.SNMPTrapParamOID, "1", trapUniqueID)
-		varBinds = addStringSubOid(varBinds, trapSender.configuration.SNMPTrapParamOID, "2", alertGroup.Severity)
-		varBinds = addStringSubOid(varBinds, trapSender.configuration.SNMPTrapParamOID, "3", *description)
+	if trapSender.configuration.SNMPVarBindAltEnabled {
+		varBinds = addStringSubOid(varBinds, trapSender.configuration.SNMPVarBindGroupID, "1", trapUniqueID)
+		varBinds = addStringSubOid(varBinds, trapSender.configuration.SNMPVarBindGroupID, "2", alertGroup.Severity)
+		varBinds = addStringSubOid(varBinds, trapSender.configuration.SNMPVarBindGroupID, "3", *description)
 	} else {
 		varBinds = addStringSubOid(varBinds, alertGroup.OID, "1", trapUniqueID)
 		varBinds = addStringSubOid(varBinds, alertGroup.OID, "2", alertGroup.Severity)
@@ -128,7 +129,11 @@ func (trapSender TrapSender) generateVarBinds(alertGroup types.AlertGroup) (snmp
 		if err != nil {
 			return nil, err
 		}
-		varBinds = addStringSubOid(varBinds, alertGroup.OID, subOid, *value)
+                if trapSender.configuration.SNMPVarBindAltEnabled {
+                    varBinds = addStringSubOid(varBinds, trapSender.configuration.SNMPVarBindGroupID, subOid, *value)
+                } else {
+                    varBinds = addStringSubOid(varBinds, alertGroup.OID, subOid, *value)
+                }
 	}
 
 	return varBinds, nil
