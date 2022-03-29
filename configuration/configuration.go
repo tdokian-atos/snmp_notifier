@@ -159,7 +159,7 @@ func ParseConfiguration(args []string) (*SNMPNotifierConfiguration, log.Logger, 
 		trapSenderConfiguration.SNMPPrivatePassword = *snmpPrivatePassword
 	}
 
-	if snmpTrapParamOid != "TRAPPARAMOID" {
+	if *snmpTrapParamOid != "TRAPPARAMOID" {
 		trapSenderConfiguration.SNMPTrapParamOID = *snmpTrapParamOid
 	}
 
