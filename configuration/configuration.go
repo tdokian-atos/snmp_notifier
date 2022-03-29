@@ -51,6 +51,7 @@ func ParseConfiguration(args []string) (*SNMPNotifierConfiguration, log.Logger, 
 		snmpTrapDescriptionTemplate = application.Flag("snmp.trap-description-template", "SNMP description template.").Default("description-template.tpl").ExistingFile()
 		snmpExtraFieldTemplate      = application.Flag("snmp.extra-field-template", "SNMP extra field templates, eg. --snmp.extra-field-templates=4=new-field.template.tpl to add a 4th field to the trap, with the given template file. You may add several fields using that flag several times.").PlaceHolder("4=extra-field-template.tpl").StringMap()
 		snmpTimeout                 = application.Flag("snmp.timeout", "SNMP timeout duration").Default("5s").Duration()
+		snmpTrapParamOid			= application.Flag("snmp.trap-parameters-oid", "Trap OID to send the labels.").Default("TRAPPARAMOID").String()
 
 		// V2c only
 		snmpCommunity = application.Flag("snmp.community", "SNMP community (V2c only). Passing secrets to the command line is not recommended, consider using the SNMP_NOTIFIER_COMMUNITY environment variable instead.").Envar(snmpCommunityEnvironmentVariable).Default("public").String()
@@ -156,6 +157,10 @@ func ParseConfiguration(args []string) (*SNMPNotifierConfiguration, log.Logger, 
 		trapSenderConfiguration.SNMPPrivateEnabled = *snmpPrivateEnabled
 		trapSenderConfiguration.SNMPPrivateProtocol = *snmpPrivateProtocol
 		trapSenderConfiguration.SNMPPrivatePassword = *snmpPrivatePassword
+	}
+
+	if snmpTrapParamOid != "TRAPPARAMOID" {
+		trapSenderConfiguration.SNMPTrapParamOID = *snmpTrapParamOid
 	}
 
 	httpServerConfiguration := httpserver.Configuration{

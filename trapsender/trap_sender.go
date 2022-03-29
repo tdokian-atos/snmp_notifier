@@ -51,6 +51,7 @@ type Configuration struct {
 	SNMPSecurityEngineID       string
 	SNMPContextEngineID        string
 	SNMPContextName            string
+	SNMPTrapParamOID           string
 
 	DescriptionTemplate template.Template
 	ExtraFieldTemplates map[string]template.Template
@@ -113,9 +114,15 @@ func (trapSender TrapSender) generateVarBinds(alertGroup types.AlertGroup) (snmp
 	trapOid, _ := snmpgo.NewOid(alertGroup.OID)
 	varBinds = addUpTime(varBinds)
 	varBinds = append(varBinds, snmpgo.NewVarBind(snmpgo.OidSnmpTrap, trapOid))
-	varBinds = addStringSubOid(varBinds, alertGroup.OID, "1", trapUniqueID)
-	varBinds = addStringSubOid(varBinds, alertGroup.OID, "2", alertGroup.Severity)
-	varBinds = addStringSubOid(varBinds, alertGroup.OID, "3", *description)
+	if SNMPTrapParamOID != "TRAPPARAMOID" {
+		varBinds = addStringSubOid(varBinds, SNMPTrapParamOID, "1", trapUniqueID)
+		varBinds = addStringSubOid(varBinds, SNMPTrapParamOID, "2", alertGroup.Severity)
+		varBinds = addStringSubOid(varBinds, SNMPTrapParamOID, "3", *description)
+	} else {
+		varBinds = addStringSubOid(varBinds, alertGroup.OID, "1", trapUniqueID)
+		varBinds = addStringSubOid(varBinds, alertGroup.OID, "2", alertGroup.Severity)
+		varBinds = addStringSubOid(varBinds, alertGroup.OID, "3", *description)
+	}
 	for subOid, template := range trapSender.configuration.ExtraFieldTemplates {
 		value, err := commons.FillTemplate(alertGroup, template)
 		if err != nil {
